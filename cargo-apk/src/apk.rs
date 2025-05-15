@@ -2,14 +2,14 @@ use crate::error::Error;
 use crate::manifest::{Inheritable, Manifest, Root};
 use cargo_subcommand::{Artifact, ArtifactType, CrateType, Profile, Subcommand};
 use ndk_build::apk::{Apk, ApkConfig};
-use ndk_build::cargo::{cargo_ndk, VersionCode};
+use ndk_build::cargo::{VersionCode, cargo_ndk};
 use ndk_build::dylibs::get_libs_search_paths;
 use ndk_build::manifest::{IntentFilter, MetaData};
 use ndk_build::ndk::{Key, Ndk};
 use ndk_build::target::Target;
 use ndk_build::util::output_error;
 use std::path::PathBuf;
-use std::process::{exit, Stdio};
+use std::process::{Stdio, exit};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -43,9 +43,10 @@ impl<'a> ApkBuilder<'a> {
         } else if !manifest.build_targets.is_empty() {
             manifest.build_targets.clone()
         } else {
-            vec![ndk
-                .detect_abi(device_serial.as_deref())
-                .unwrap_or(Target::Arm64V8a)]
+            vec![
+                ndk.detect_abi(device_serial.as_deref())
+                    .unwrap_or(Target::Arm64V8a),
+            ]
         };
         let build_dir = dunce::simplified(cmd.target_dir())
             .join(cmd.profile())
@@ -281,7 +282,12 @@ impl<'a> ApkBuilder<'a> {
                 }
             }
             (Some(path), None) => {
-                eprintln!("`{}` was specified via `{}`, but `{}` was not specified, both or neither must be present for profiles other than `dev`", path.display(), keystore_env, password_env);
+                eprintln!(
+                    "`{}` was specified via `{}`, but `{}` was not specified, both or neither must be present for profiles other than `dev`",
+                    path.display(),
+                    keystore_env,
+                    password_env
+                );
                 return Err(Error::MissingReleaseKey(profile_name.to_owned()));
             }
             (None, _) => {
