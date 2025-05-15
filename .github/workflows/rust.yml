@@ -60,6 +60,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Installing Android SDK
+        uses: android-actions/setup-android@v3.2.1
+
       - name: Installing Rust ${{ matrix.rust-channel }} w/ ${{ matrix.rust-target }}
         run: |
           rustup toolchain install ${{ matrix.rust-channel }}
