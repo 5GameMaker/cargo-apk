@@ -2,6 +2,7 @@ use crate::error::NdkError;
 use crate::manifest::AndroidManifest;
 use crate::ndk::{Key, Ndk};
 use crate::target::Target;
+use crate::util::output_error;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::ffi::OsStr;
@@ -96,9 +97,7 @@ impl ApkConfig {
             aapt.arg("-A").arg(assets);
         }
 
-        if !aapt.status()?.success() {
-            return Err(NdkError::CmdFailed(aapt));
-        }
+        output_error(aapt)?;
 
         Ok(UnalignedApk {
             config: self,
@@ -138,10 +137,7 @@ impl<'a> UnalignedApk<'a> {
                     cmd.arg("--strip-debug");
                     cmd.arg(path);
                     cmd.arg(&out);
-
-                    if !cmd.status()?.success() {
-                        return Err(NdkError::CmdFailed(cmd));
-                    }
+                    output_error(cmd)?;
                 }
 
                 if self.config.strip == StripConfig::Split {
@@ -152,19 +148,13 @@ impl<'a> UnalignedApk<'a> {
                         cmd.arg("--only-keep-debug");
                         cmd.arg(path);
                         cmd.arg(&dwarf_path);
-
-                        if !cmd.status()?.success() {
-                            return Err(NdkError::CmdFailed(cmd));
-                        }
+                        output_error(cmd)?;
                     }
 
                     let mut cmd = Command::new(obj_copy);
                     cmd.arg(format!("--add-gnu-debuglink={}", dwarf_path.display()));
                     cmd.arg(out);
-
-                    if !cmd.status()?.success() {
-                        return Err(NdkError::CmdFailed(cmd));
-                    }
+                    output_error(cmd)?;
                 }
             }
         }
@@ -210,9 +200,7 @@ impl<'a> UnalignedApk<'a> {
             aapt.arg(lib_path_unix);
         }
 
-        if !aapt.status()?.success() {
-            return Err(NdkError::CmdFailed(aapt));
-        }
+        output_error(aapt)?;
 
         let mut zipalign = self.config.build_tool(bin!("zipalign"))?;
         zipalign
@@ -222,9 +210,7 @@ impl<'a> UnalignedApk<'a> {
             .arg(self.config.unaligned_apk())
             .arg(self.config.apk());
 
-        if !zipalign.status()?.success() {
-            return Err(NdkError::CmdFailed(zipalign));
-        }
+        output_error(zipalign)?;
 
         Ok(UnsignedApk(self.config))
     }
@@ -242,9 +228,7 @@ impl<'a> UnsignedApk<'a> {
             .arg("--ks-pass")
             .arg(format!("pass:{}", &key.password))
             .arg(self.0.apk());
-        if !apksigner.status()?.success() {
-            return Err(NdkError::CmdFailed(apksigner));
-        }
+        output_error(apksigner)?;
         Ok(Apk::from_config(self.0))
     }
 }
@@ -274,9 +258,7 @@ impl Apk {
 
             adb.arg("reverse").arg(from).arg(to);
 
-            if !adb.status()?.success() {
-                return Err(NdkError::CmdFailed(adb));
-            }
+            output_error(adb)?;
         }
 
         Ok(())
@@ -286,9 +268,7 @@ impl Apk {
         let mut adb = self.ndk.adb(device_serial)?;
 
         adb.arg("install").arg("-r").arg(&self.path);
-        if !adb.status()?.success() {
-            return Err(NdkError::CmdFailed(adb));
-        }
+        output_error(adb)?;
         Ok(())
     }
 
@@ -302,9 +282,7 @@ impl Apk {
             .arg("-n")
             .arg(format!("{}/android.app.NativeActivity", self.package_name));
 
-        if !adb.status()?.success() {
-            return Err(NdkError::CmdFailed(adb));
-        }
+        output_error(adb)?;
 
         Ok(())
     }
@@ -317,13 +295,9 @@ impl Apk {
             .arg("package")
             .arg("-U")
             .arg(&self.package_name);
-        let output = adb.output()?;
+        let output = output_error(adb)?;
+        let output = String::from_utf8_lossy(&output);
 
-        if !output.status.success() {
-            return Err(NdkError::CmdFailed(adb));
-        }
-
-        let output = std::str::from_utf8(&output.stdout).unwrap();
         let (_package, uid) = output
             .lines()
             .filter_map(|line| line.split_once(' '))
@@ -332,12 +306,16 @@ impl Apk {
             .find(|(package, _uid)| package.strip_prefix("package:") == Some(&self.package_name))
             .ok_or(NdkError::PackageNotInOutput {
                 package: self.package_name.clone(),
-                output: output.to_owned(),
+                output: output.to_string(),
             })?;
         let uid = uid
             .strip_prefix("uid:")
-            .ok_or(NdkError::UidNotInOutput(output.to_owned()))?;
+            .ok_or(NdkError::UidNotInOutput(output.to_string()))?;
         uid.parse()
             .map_err(|e| NdkError::NotAUid(e, uid.to_owned()))
+    }
+
+    pub fn package(&self) -> &str {
+        &self.package_name
     }
 }

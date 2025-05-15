@@ -1,6 +1,7 @@
 use crate::apk::UnalignedApk;
 use crate::error::NdkError;
 use crate::target::Target;
+use crate::util::output_error;
 use std::collections::HashSet;
 use std::io::BufRead;
 use std::path::{Path, PathBuf};
@@ -69,12 +70,10 @@ impl<'a> UnalignedApk<'a> {
 /// List all linked shared libraries
 fn list_needed_libs(readelf_path: &Path, library_path: &Path) -> Result<HashSet<String>, NdkError> {
     let mut readelf = Command::new(readelf_path);
-    let output = readelf.arg("-d").arg(library_path).output()?;
-    if !output.status.success() {
-        return Err(NdkError::CmdFailed(readelf));
-    }
+    readelf.arg("-d").arg(library_path);
+    let output = output_error(readelf)?;
     let mut needed = HashSet::new();
-    for line in output.stdout.lines() {
+    for line in output.lines() {
         let line = line?;
         if line.contains("(NEEDED)") {
             let lib = line

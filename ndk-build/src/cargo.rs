@@ -1,6 +1,7 @@
 use crate::error::NdkError;
 use crate::ndk::Ndk;
 use crate::target::Target;
+use crate::util::color;
 use std::path::Path;
 use std::process::Command;
 
@@ -13,6 +14,10 @@ pub fn cargo_ndk(
     let triple = target.rust_triple();
     let clang_target = format!("--target={}{}", target.ndk_llvm_triple(), sdk_version);
     let mut cargo = Command::new("cargo");
+
+    if color() {
+        cargo.arg("--color=always");
+    }
 
     const SEP: &str = "\x1f";
 

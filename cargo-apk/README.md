@@ -1,24 +1,21 @@
 # cargo apk
 
-[![Actions Status](https://github.com/rust-mobile/cargo-apk/actions/workflows/rust.yml/badge.svg)](https://github.com/rust-mobile/cargo-apk/actions)
+[![Actions Status](https://github.com/5GameMaker/cargo-apk/actions/workflows/rust.yml/badge.svg)](https://github.com/5GameMaker/cargo-apk/actions)
 [![Latest version](https://img.shields.io/crates/v/cargo-apk.svg?logo=rust)](https://crates.io/crates/cargo-apk)
 [![MSRV](https://img.shields.io/badge/rustc-1.70.0+-ab6000.svg)](https://blog.rust-lang.org/2023/06/01/Rust-1.70.0.html)
 [![Documentation](https://docs.rs/cargo-apk/badge.svg)](https://docs.rs/cargo-apk)
-[![Lines of code](https://tokei.rs/b1/github/rust-mobile/cargo-apk)](https://github.com/rust-mobile/cargo-apk)
+[![Lines of code](https://tokei.rs/b1/github/5GameMaker/cargo-apk)](https://github.com/5GameMaker/cargo-apk)
 ![MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)
-
-> [!CAUTION]
-> This tool is deprecated in favour of [`xbuild`](https://github.com/rust-mobile/xbuild).
 
 Tool for creating Android packages.
 
 ## Installation
 
-From crates.io:
+From git:
 
 ```console
-$ cargo install cargo-apk
+$ cargo install --git https://github.com/5GameMaker/cargo-apk
 ```
 
 From source:

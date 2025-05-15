@@ -1,5 +1,6 @@
 use crate::error::NdkError;
 use crate::target::Target;
+use crate::util::output_error;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -415,9 +416,7 @@ impl Ndk {
                 .arg("2048")
                 .arg("-validity")
                 .arg("10000");
-            if !keytool.status()?.success() {
-                return Err(NdkError::CmdFailed(keytool));
-            }
+            output_error(keytool)?;
         }
         Ok(Key { path, password })
     }

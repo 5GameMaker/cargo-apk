@@ -44,8 +44,8 @@ pub enum NdkError {
     IoPathError(PathBuf, #[source] IoError),
     #[error("Invalid semver")]
     InvalidSemver,
-    #[error("Command `{}` had a non-zero exit code.", format!("{:?}", .0).replace('"', ""))]
-    CmdFailed(Command),
+    #[error("{}\n\nCommand `{}` had a non-zero exit code.", .1, format!("{:?}", .0).replace('"', ""))]
+    CmdFailed(Command, IoError),
     #[error(transparent)]
     Serialize(#[from] quick_xml::de::DeError),
     #[error("String `{1}` is not a UID")]

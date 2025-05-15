@@ -4,11 +4,14 @@ use cargo_subcommand::{Artifact, ArtifactType, CrateType, Profile, Subcommand};
 use ndk_build::apk::{Apk, ApkConfig};
 use ndk_build::cargo::{cargo_ndk, VersionCode};
 use ndk_build::dylibs::get_libs_search_paths;
-use ndk_build::error::NdkError;
 use ndk_build::manifest::{IntentFilter, MetaData};
 use ndk_build::ndk::{Key, Ndk};
 use ndk_build::target::Target;
+use ndk_build::util::output_error;
 use std::path::PathBuf;
+use std::process::{exit, Stdio};
+use std::thread::sleep;
+use std::time::Duration;
 
 pub struct ApkBuilder<'a> {
     cmd: &'a Subcommand,
@@ -150,9 +153,7 @@ impl<'a> ApkBuilder<'a> {
                 cargo.arg("--target").arg(triple);
             }
             self.cmd.args().apply(&mut cargo);
-            if !cargo.status()?.success() {
-                return Err(NdkError::CmdFailed(cargo).into());
-            }
+            output_error(cargo)?;
         }
         Ok(())
     }
@@ -234,9 +235,7 @@ impl<'a> ApkBuilder<'a> {
             }
             self.cmd.args().apply(&mut cargo);
 
-            if !cargo.status()?.success() {
-                return Err(NdkError::CmdFailed(cargo).into());
-            }
+            output_error(cargo)?;
 
             let mut libs_search_paths =
                 get_libs_search_paths(self.cmd.target_dir(), triple, self.cmd.profile().as_ref())?;
@@ -314,17 +313,59 @@ impl<'a> ApkBuilder<'a> {
         apk.reverse_port_forwarding(self.device_serial.as_deref())?;
         apk.install(self.device_serial.as_deref())?;
         apk.start(self.device_serial.as_deref())?;
-        let uid = apk.uidof(self.device_serial.as_deref())?;
+        //let uid = apk.uidof(self.device_serial.as_deref())?;
 
         if !no_logcat {
-            self.ndk
+            let mut waiting = false;
+            let pid = loop {
+                sleep(Duration::from_millis(250));
+                let out = self
+                    .ndk
+                    .adb(self.device_serial.as_deref())?
+                    .arg("shell")
+                    .arg("pidof")
+                    .arg(apk.package())
+                    .output()?;
+                if out.status.success() {
+                    break out.stdout;
+                } else if !waiting {
+                    waiting = true;
+                    eprintln!("Waiting for the app to start!");
+                }
+            };
+            let Ok(pid) = String::from_utf8(pid) else {
+                eprintln!("App not running!");
+                exit(1);
+            };
+            let mut process = self
+                .ndk
                 .adb(self.device_serial.as_deref())?
                 .arg("logcat")
                 .arg("-v")
                 .arg("color")
-                .arg("--uid")
-                .arg(uid.to_string())
-                .status()?;
+                .arg("--pid")
+                .arg(pid.trim())
+                .spawn()?;
+            loop {
+                sleep(Duration::from_secs(1));
+                if matches!(
+                    self.ndk
+                        .adb(self.device_serial.as_deref())?
+                        .arg("shell")
+                        .arg("pidof")
+                        .arg(apk.package())
+                        .stdout(Stdio::piped())
+                        .stderr(Stdio::null())
+                        .stdin(Stdio::null())
+                        .status()
+                        .map(|x| x.success()),
+                    Err(_) | Ok(false)
+                ) {
+                    break;
+                }
+            }
+            sleep(Duration::from_millis(250));
+            process.kill()?;
         }
 
         Ok(())
@@ -363,9 +404,7 @@ impl<'a> ApkBuilder<'a> {
                 cargo.arg(additional_arg);
             }
 
-            if !cargo.status()?.success() {
-                return Err(NdkError::CmdFailed(cargo).into());
-            }
+            output_error(cargo)?;
         }
         Ok(())
     }
