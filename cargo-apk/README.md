@@ -2,7 +2,7 @@
 
 [![Actions Status](https://github.com/5GameMaker/cargo-apk/actions/workflows/rust.yml/badge.svg)](https://github.com/5GameMaker/cargo-apk/actions)
 [![Latest version](https://img.shields.io/crates/v/cargo-apk.svg?logo=rust)](https://crates.io/crates/cargo-apk)
-[![MSRV](https://img.shields.io/badge/rustc-1.70.0+-ab6000.svg)](https://blog.rust-lang.org/2023/06/01/Rust-1.70.0.html)
+[![MSRV](https://img.shields.io/badge/rustc-1.86.0+-ab6000.svg)](https://blog.rust-lang.org/2023/06/01/Rust-1.86.0.html)
 [![Documentation](https://docs.rs/cargo-apk/badge.svg)](https://docs.rs/cargo-apk)
 [![Lines of code](https://tokei.rs/b1/github/5GameMaker/cargo-apk)](https://github.com/5GameMaker/cargo-apk)
 ![MIT](https://img.shields.io/badge/License-MIT-green.svg)
