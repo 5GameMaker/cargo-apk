@@ -2,14 +2,14 @@
 name = "cargo-apk"
 version = "0.10.0"
 authors = ["The Rust Windowing contributors"]
-edition = "2018"
+edition = "2024"
 description = "Helps cargo build APKs"
 license = "MIT OR Apache-2.0"
 keywords = ["android", "ndk", "apk"]
 documentation = "https://docs.rs/cargo-apk"
 homepage = "https://github.com/rust-mobile/cargo-apk"
 repository = "https://github.com/rust-mobile/cargo-apk"
-rust-version = "1.70"
+rust-version = "1.86.0"
 
 [dependencies]
 anyhow = "1.0.57"

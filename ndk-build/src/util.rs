@@ -1,6 +1,6 @@
 use std::{
     env::var,
-    io::{self, stderr, IsTerminal, Read},
+    io::{self, IsTerminal, Read, stderr},
     process::{Command, Stdio},
     sync::{Arc, Mutex},
     thread::spawn,
@@ -97,20 +97,15 @@ pub fn output_error(mut command: Command) -> Result<Vec<u8>, NdkError> {
         }),
     );
 
-    h1.join()
-        .map_err(|_| io::Error::new(io::ErrorKind::Other, "join error"))??;
-    h2.join()
-        .map_err(|_| io::Error::new(io::ErrorKind::Other, "join error"))??;
+    h1.join().map_err(|_| io::Error::other("join error"))??;
+    h2.join().map_err(|_| io::Error::other("join error"))??;
 
     if process.wait()?.success() {
         Ok(output.lock().unwrap().stdout())
     } else {
         Err(NdkError::CmdFailed(
             command,
-            io::Error::new(
-                io::ErrorKind::Other,
-                String::from_utf8_lossy(&output.lock().unwrap().stderr()),
-            ),
+            io::Error::other(String::from_utf8_lossy(&output.lock().unwrap().stderr())),
         ))
     }
 }

@@ -218,7 +218,7 @@ impl<'a> UnalignedApk<'a> {
 
 pub struct UnsignedApk<'a>(&'a ApkConfig);
 
-impl<'a> UnsignedApk<'a> {
+impl UnsignedApk<'_> {
     pub fn sign(self, key: Key) -> Result<Apk, NdkError> {
         let mut apksigner = self.0.build_tool(bat!("apksigner"))?;
         apksigner

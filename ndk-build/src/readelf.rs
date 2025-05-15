@@ -7,7 +7,7 @@ use std::io::BufRead;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-impl<'a> UnalignedApk<'a> {
+impl UnalignedApk<'_> {
     pub fn add_lib_recursively(
         &mut self,
         lib: &Path,
