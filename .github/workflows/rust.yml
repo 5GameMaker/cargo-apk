@@ -89,7 +89,7 @@ jobs:
         if: ${{ matrix.rust-target == 'x86_64-linux-android' }}
         name: Upload hello_world apk
         with:
-          name: hello_world_${{ matrix.os }}_${{ matrix.rust-channel }}}-${{ matrix.rust-target }
+          name: hello_world_${{ matrix.os }}_${{ matrix.rust-channel }}-${{ matrix.rust-target }}
           path: ./target/debug/apk/examples/hello_world.apk
 
   android_emulator:
